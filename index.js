@@ -15,7 +15,7 @@ const levels = {
 };
 
 const loggingWinston = new LoggingWinston({
-  logName: "test_winston_log",
+  // logName: "stdout",
   levels,
 });
 
@@ -25,10 +25,13 @@ const logger = winston.createLogger({
   // levels: winston.config.syslog.levels,
   levels,
   level: "debug",
-  format: winston.format.combine(
-    winston.format.label({ label: "defaultLabel" }),
-    winston.format.json()
-  ),
+  defaultMeta: {
+    logName: `projects/${
+      process.env.PROJECT_ID ?? "project-id"
+    }/logs/test-custom-log-name`,
+    labels: { route_to: "bigquery" },
+  },
+  format: winston.format.combine(winston.format.json()),
   transports: [
     new winston.transports.Console(),
     // Add Cloud Logging
@@ -36,8 +39,12 @@ const logger = winston.createLogger({
   ],
 });
 
-logger.info("test log: info");
-logger.info("test log: info", { label: "testLabel" });
+// logger.info("test log: info");
+try {
+  throw new Error("error1");
+} catch (error) {
+  logger.error("test log: info", new Error("test error", { cause: error }));
+}
 
 // logger.alert("test log: alert");
 // logger.error("test log: error");
